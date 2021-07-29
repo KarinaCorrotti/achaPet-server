@@ -1,6 +1,7 @@
 const express = require('express');
 const app = express();
-const connectDB = require('../achapet-server/mongoDB/bd');
+// const connectDB = require('../achapet-server/mongoDB/bd');
+const mongoose = require('mongoose');
 
 const cors = require('cors');
 const bodyParser = require('body-parser');
@@ -21,9 +22,20 @@ require("dotenv").config();
 
 // app.use('/users', usersRouter);
 
-connectDB();
+
+
+// connectDB();
 app.listen(process.env.PORT || 3003, () => {
   console.log('Servidor online!')   
+  const URI = process.env.MONGO_URL;
+
+const connectDB = async() =>{
+    await mongoose.connect(URI,{ 
+        useNewUrlParser: true, 
+        useUnifiedTopology: true 
+    });
+    console.log('Banco conectado')
+};
 })
 
 module.exports = app;
