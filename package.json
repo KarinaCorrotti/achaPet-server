@@ -1,7 +1,7 @@
 {
-  "name": "achapet-server",  
+  "name": "achapet-server",
   "main": "app.js",
-  "version": "0.0.0",  
+  "version": "0.0.0",
   "engines": {
     "node": "10.16.3",
     "npm": "6.9.0"
