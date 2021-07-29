@@ -1,6 +1,10 @@
 {
   "name": "achapet-server",
+  "description": "a really cool app",
   "version": "0.0.1",
+  "engines": {
+    "npm": "6.x"
+  },
   "private": true,
   "scripts": {
     "start": "node app.js"
