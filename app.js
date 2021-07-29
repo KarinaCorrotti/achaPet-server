@@ -22,7 +22,7 @@ require("dotenv").config();
 // app.use('/users', usersRouter);
 
 connectDB();
-server = app.listen(process.env.PORT || 3003, () => {
+app.listen(process.env.PORT || 3003, () => {
   console.log('Servidor online!')   
 })
 
