@@ -1,6 +1,6 @@
 const express = require('express');
 const app = express();
-const connectDB = require('/mongoDB/bd');
+const connectDB = require('./mongoDB/bd');
 
 
 const cors = require('cors');
@@ -13,7 +13,7 @@ app.use(cors());
 
 // var usersRouter = require('./routes/users');
 
-require('/routes/users')(app);
+require('./routes/users')(app);
 require("dotenv").config();
 
 // app.use(express.json());
