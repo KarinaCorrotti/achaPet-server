@@ -1,6 +1,7 @@
 const express = require('express');
 const app = express();
 const connectDB = require('./mongoDB/bd');
+const path = require("path");
 
 
 const cors = require('cors');
@@ -10,6 +11,7 @@ const jwt = require('jsonwebtoken');
 app.use(bodyParser.json({limit: '50mb'}));
 app.use(bodyParser.urlencoded({limit: '50mb', extended: true}));
 app.use(cors());
+app.use('/files', express.static(path.resolve(__dirname, 'tmp', 'uploads')));
 
 // var usersRouter = require('./routes/users');
 

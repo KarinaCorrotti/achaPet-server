@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const mongoose = require ('mongoose');
+const multer = require ('multer');
+const multerConfig = require('../config/multer')
 
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
@@ -8,22 +10,22 @@ const jwt = require('jsonwebtoken');
 
 const User = require('../models/user.model');
 
-router.post('/create', async(req, res) => {  //recebe um parametro com os dados do usuario e registra no banco de dados    
-    if(!req.body.senha){ // verifica se o usuario tem uma senha
+router.post('/create', async(req, res) => {  // post para criação de usuário com senha
+    if(!req.body.senha){ 
         return res.status(400).send({ error: 'Erro, senha vazia' });
     }else {
         try{          
           const { email } = req.body; 
-            const user = await User.findOne({email}); //busca no banco de dados se já existe um user com este email      
+            const user = await User.findOne({email});    
             if(user){
-              return res.status(400).send({ error: 'Email já cadastrado' }); // caso exista retorna um erro 400               
+              return res.status(400).send({ error: 'Email já cadastrado' });               
             }else{ 
-              const user = await User.create(req.body); //caso não exista ele cria um user
+              const user = await User.create(req.body); 
               user.senha = undefined;   
-              const token = jwt.sign({ senha: req.body.senha }, process.env.SECRET, { //assim que ele cadastra um usuario ele já cria um token
-                expiresIn: 300 // tempo que expira o token do usuario 5 min
+              const token = jwt.sign({ senha: req.body.senha }, process.env.SECRET, { 
+                expiresIn: 300
               });
-              return res.send({ auth: true, user, token }); //se o cadastro for feito com sucesso, ele retorna a autorização true e o token, junto com dados do usuario            
+              return res.send({ auth: true, user, token });          
             }            
           }catch(error){            
             return res.status(400).send({ error: 'Erro no registro' });    
@@ -31,34 +33,45 @@ router.post('/create', async(req, res) => {  //recebe um parametro com os dados 
     }    
 });
 
-router.post('/authenticate', async(req, res) =>{     
+router.post('/authenticate', multer(multerConfig).single("file"), async(req, res) =>{    // post de autenticação 
     const { email, senha } = req.body; 
-    if(!req.body.senha && !req.body.tokenGoogle){ // verifica se o usuario tem uma senha ou tokenGoogle
+    
+    if(!req.body.senha && !req.body.tokenGoogle){ 
       return res.status(400).send({ error: 'Erro senha e token vazios' });
     }else{
-      if(req.body.tokenGoogle && !req.body.senha){ // verifica se não tem senha, caso não tiver o usuario esta entrando com o google
-        const user = await User.findOne({email}).select('+tokenGoogle'); // procura no banco um usuario com o mesmo email e trás junto com o tokenGoogle gravados
+      const { originalname: nomeFoto, size: tamanho, filename: key} = req.file;
+      if(req.body.tokenGoogle && !req.body.senha){ 
+        const user = await User.findOne({email}).select('+tokenGoogle'); 
         //tentando logar ou criar via google
-        if(!user){ // caso não ache um usuario com esta senha ele cria um novo
-          const user = await User.create(req.body);
-          const token = jwt.sign({ tokenGoogle: req.body.tokenGoogle }, process.env.SECRET, { //assim que ele cadastra um usuario ele já cria um token
-            expiresIn: 300 // tempo que expira o token do usuario 5 min
+        if(!user){ 
+          const userInfo = { 
+            foto: {
+              nomeFoto,
+              tamanho,
+              key,
+              url: '',
+            },
+            ...req.body
+          };          
+          const user = await User.create(userInfo);
+          const token = jwt.sign({ tokenGoogle: req.body.tokenGoogle }, process.env.SECRET, { 
+            expiresIn: 300 
           });
-          return res.send({ auth: true, user, token });  //se o cadastro for feito com sucesso, ele retorna a autorização true e o token, junto com dados do usuario 
+          return res.send({ auth: true, user, token }); 
         }else{          
-          const token = jwt.sign({ tokenGoogle: req.body.tokenGoogle }, process.env.SECRET, { //assim que ele logar um usuario ele já cria um token
-            expiresIn: 300 // tempo que expira o token do usuario 5 min
+          const token = jwt.sign({ tokenGoogle: req.body.tokenGoogle }, process.env.SECRET, { 
+            expiresIn: 300 
           });
-          return res.send({ auth: true, user, token });  //se o login for feito com sucesso, ele retorna a autorização true e o token, junto com dados do usuario 
+          return res.send({ auth: true, user, token });  
         }
-      }else if (!req.body.tokenGoogle && req.body.senha){ // verifica se não tem tokenGoogle, caso não tiver o usuario esta entrando com o login normal com senha
+      }else if (!req.body.tokenGoogle && req.body.senha){ 
         const user = await User.findOne({email}).select('+senha');
         if(!user.senha)
-          return res.status(400).send({error: 'Usuario já tem cadastro pela google'}); //caso o usuario digiti um email no login, porem ele já tenha um email cadastrado só que pelo google 
+          return res.status(400).send({error: 'Usuario já tem cadastro pela google'});
         //tentando fazer login normal  
         if(!user)
           return res.status(400).send({error: 'Usuario nao encontrado'});      
-        if(!await bcrypt.compare(senha, user.senha))//descriptografa a senha para a comparação, await é por causa da função ser assincrona, promise
+        if(!await bcrypt.compare(senha, user.senha))
           return res.status(400).send({error: 'Senha invalida'});  
         const token = jwt.sign({ senha: req.body.senha }, process.env.SECRET, { 
           expiresIn: 300 
@@ -71,11 +84,11 @@ router.post('/authenticate', async(req, res) =>{
 });
 
 
-function verifyJWT(req, res, next){  
-  const token = req.headers['x-access-token']; //Aqui eu obtive o token a partir do cabeçalho x-access-token, que se não existir já gera um erro logo de primeira
+function verifyJWT(req, res, next){  // função de verificação do Token
+  const token = req.headers['x-access-token']; 
   if (!token) return res.status(403).json({ auth: false, message: 'No token provided.' });
   
-  jwt.verify(token, process.env.SECRET, function(err, decoded) { //verificamos a autenticidade desse token usando a função verify, usando a variável de ambiente com o SECRET. Caso ele não consiga verificar o token, irá gerar um erro
+  jwt.verify(token, process.env.SECRET, function(err, decoded) { 
     if (err) return res.status(403).json({ auth: false, message: 'Failed to authenticate token.' });
     
     // se tudo estiver ok, salva no request para uso posterior
@@ -93,5 +106,12 @@ router.get('/client', verifyJWT, async(req, res, next) =>{ // GET de teste
 router.post('/logout', async(req, res) =>{  // logout do sistema
   res.send({auth: false, token: null})
 });
+
+router.post('/postImage', multer(multerConfig).single("file"), async(req, res) =>{  // logout do sistema
+  console.log(req.file);
+
+  return res.json({ hello: "DEU CERTO" })
+});
+
 
 module.exports = app => app.use('/users', router);
