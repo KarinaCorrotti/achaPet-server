@@ -98,20 +98,35 @@ function verifyJWT(req, res, next){  // função de verificação do Token
   });
 }
 
-router.get('/client', verifyJWT, async(req, res, next) =>{ // GET de teste
-  // console.log('body do get:', req.userId);
-  console.log("Retornou todos clientes!");  
-});
-
 router.post('/logout', async(req, res) =>{  // logout do sistema
   res.send({auth: false, token: null})
 });
 
-router.post('/postImage', multer(multerConfig).single("file"), async(req, res) =>{  // logout do sistema
+router.delete('/deleteUser', async(req, res) =>{ //recebe um parametro com email do usuario para deletar do banco de dados  
+  const { email } = req.body;
+  const user = await User.findOne({email});
+
+  await user.remove();
+  return res.send();    
+
+});
+
+
+
+
+
+
+//Area de rotas para testes
+
+router.post('/postImage', multer(multerConfig).single("file"), async(req, res) =>{  
   console.log(req.file);
 
   return res.json({ hello: "DEU CERTO" })
 });
 
+router.get('/client', verifyJWT, async(req, res, next) =>{ // GET de teste
+  // console.log('body do get:', req.userId);
+  console.log("Retornou todos clientes!");  
+});
 
 module.exports = app => app.use('/users', router);
