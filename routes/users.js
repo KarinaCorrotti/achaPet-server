@@ -39,7 +39,7 @@ router.post('/authenticate', multer(multerConfig).single("file"), async(req, res
     if(!req.body.senha && !req.body.tokenGoogle){ 
       return res.status(400).send({ error: 'Erro senha e token vazios' });
     }else{
-      const { originalname: nomeFoto, size: tamanho, filename: key} = req.file;
+      const { originalname: nomeFoto, size: tamanho, key, location: url = ""} = req.file;
       if(req.body.tokenGoogle && !req.body.senha){ 
         const user = await User.findOne({email}).select('+tokenGoogle'); 
         //tentando logar ou criar via google
@@ -49,7 +49,7 @@ router.post('/authenticate', multer(multerConfig).single("file"), async(req, res
               nomeFoto,
               tamanho,
               key,
-              url: '',
+              url
             },
             ...req.body
           };          

@@ -3,6 +3,9 @@ const bcrypt = require('bcryptjs');
 const fs = require('fs');
 const path = require('path');
 const { promisify } = require('util');
+const aws = require('aws-sdk');
+
+const s3 = new aws.S3();
 
 require("dotenv").config();
 
@@ -22,8 +25,7 @@ const UserSchema = new mongoose.Schema({
 });
 
 
-UserSchema.pre('save', async function(next){
-    console.log("save");
+UserSchema.pre('save', async function(next){    
     if(this.senha){
         const hash = await bcrypt.hash(this.senha, 10);
         this.senha = hash;        
@@ -33,9 +35,15 @@ UserSchema.pre('save', async function(next){
     }
 });
 
-UserSchema.pre('remove', async function(){
-    console.log(this.foto.key);
-    return promisify(fs.unlink)(path.resolve(__dirname, '..', 'tmp', 'uploads', this.foto.key));
+UserSchema.pre('remove', async function(){    
+    if (process.env.STORAGE_TYPE === 's3'){
+        return s3.deleteObject({
+            Bucket: 'achapet',
+            Key: this.foto.key,
+        }).promise()
+    } else {
+        return promisify(fs.unlink)(path.resolve(__dirname, '..', 'tmp', 'uploads', this.foto.key));
+    }  
 })
 
 
