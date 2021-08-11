@@ -3,6 +3,7 @@ const router = express.Router();
 const mongoose = require ('mongoose');
 const multer = require ('multer');
 const multerConfig = require('../config/multer')
+require("dotenv").config();
 
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');

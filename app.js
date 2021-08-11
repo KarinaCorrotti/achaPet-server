@@ -2,6 +2,7 @@ const express = require('express');
 const app = express();
 const connectDB = require('./mongoDB/bd');
 const path = require("path");
+require("dotenv").config();
 
 const cors = require('cors');
 const bodyParser = require('body-parser');
@@ -15,7 +16,7 @@ app.use('/files', express.static(path.resolve(__dirname, 'tmp', 'uploads')));
 // var usersRouter = require('./routes/users');
 
 require('./routes/users')(app);
-require("dotenv").config();
+
 
 // app.use(express.json());
 // app.use(express.urlencoded({ extended: false }));
