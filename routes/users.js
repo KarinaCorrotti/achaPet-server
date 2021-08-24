@@ -2,16 +2,24 @@ const express = require('express');
 const router = express.Router();
 const mongoose = require ('mongoose');
 const multer = require ('multer');
-const multerConfig = require('../config/multer')
+const multerConfig = require('../config/multer');
+const path = require('path');
+const aws = require('aws-sdk');
+const moment = require('moment');
+const User = require('../models/user.model');
+const CepCoords = require("coordenadas-do-cep");
+
+const s3 = new aws.S3();
+
 require("dotenv").config();
 
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
-
-const User = require('../models/user.model');
+ 
 
 router.post('/create', async(req, res) => {  // post para criação de usuário com senha
+  console.log(req.body)
     if(!req.body.senha){ 
         return res.status(400).send({ error: 'Erro, senha vazia' });
     }else {
@@ -34,35 +42,29 @@ router.post('/create', async(req, res) => {  // post para criação de usuário 
     }    
 });
 
-router.post('/authenticate', multer(multerConfig).single("file"), async(req, res) =>{    // post de autenticação 
+router.post('/authenticate', async(req, res) =>{    // post de autenticação 
     const { email, senha } = req.body; 
+    console.log(req.body)
+    console.log('req ', req.file)
     
     if(!req.body.senha && !req.body.tokenGoogle){ 
       return res.status(400).send({ error: 'Erro senha e token vazios' });
-    }else{
-      const { originalname: nomeFoto, size: tamanho, key, location: url = ""} = req.file;
+    }else{     
       if(req.body.tokenGoogle && !req.body.senha){ 
         const user = await User.findOne({email}).select('+tokenGoogle'); 
         //tentando logar ou criar via google
-        if(!user){ 
-          const userInfo = { 
-            foto: {
-              nomeFoto,
-              tamanho,
-              key,
-              url
-            },
-            ...req.body
-          };          
-          const user = await User.create(userInfo);
+        if(!user){                  
+          const user = await User.create(req.body);
           const token = jwt.sign({ tokenGoogle: req.body.tokenGoogle }, process.env.SECRET, { 
-            expiresIn: 300 
+            // expiresIn: 300  //expira em 5 min o token
           });
+          user.tokenGoogle = undefined; 
           return res.send({ auth: true, user, token }); 
         }else{          
           const token = jwt.sign({ tokenGoogle: req.body.tokenGoogle }, process.env.SECRET, { 
-            expiresIn: 300 
+            // expiresIn: 300 //expira em 5 min o token
           });
+          user.tokenGoogle = undefined; 
           return res.send({ auth: true, user, token });  
         }
       }else if (!req.body.tokenGoogle && req.body.senha){ 
@@ -75,8 +77,9 @@ router.post('/authenticate', multer(multerConfig).single("file"), async(req, res
         if(!await bcrypt.compare(senha, user.senha))
           return res.status(400).send({error: 'Senha invalida'});  
         const token = jwt.sign({ senha: req.body.senha }, process.env.SECRET, { 
-          expiresIn: 300 
+          // expiresIn: 300 //expira em 5 min o token
         });
+        user.senha = undefined; 
         res.send({auth: true, user, token});
       }else {        
         return res.status(400).send({ error: 'Login indevido' }); 
@@ -85,7 +88,104 @@ router.post('/authenticate', multer(multerConfig).single("file"), async(req, res
 });
 
 
-function verifyJWT(req, res, next){  // função de verificação do Token
+
+router.delete('/deleteUser', async(req, res) =>{ //recebe um parametro com email do usuario para deletar do banco de dados  
+  const { email } = req.body;
+  const user = await User.findOne({email});
+
+  await user.remove();
+  return res.send();    
+
+});
+
+router.put('/updateUser', verifyJWT, async(req, res) => {
+  console.log("dentro da rota de Update");  
+  try{    
+    const user = await User.findOneAndUpdate(
+      { email: req.body.email }, 
+      { $set: {nome: req.body.nome,
+      email: req.body.email,
+      }},
+      { new: true, useFindAndModify: false });             
+    return res.send((user));
+  }catch(error){    
+    return res.status(400).send({ error: 'Error update user' });    
+  }  
+});
+
+
+// posts de cães achados -------------------------------------------------------------------------
+
+router.post('/caesachados', verifyJWT, async(req, res) => {
+  console.log(req.body);
+  moment.locale('pt-br');  
+  try{
+    const achado = {
+        id: Math.random() + Math.random(),
+        descricao: req.body.descricao,
+        animal: req.body.animal,
+        caracteristicas: req.body.caracteristicas,        
+        hora: moment().format('LT'),
+        data: moment().format('LL'),
+        longitude: req.body.longitude,
+        latitude: req.body.latitude,
+    }
+    const user = await User.updateOne(      
+      { email: req.body.email },
+      { $push: {'achados': achado}}, 
+      { new: true, useFindAndModify: false });
+      return res.send((achado));    
+  }catch(error){
+    console.log(error)
+    return res.status(400).send({ error: 'Registration failed' });  
+  }
+});
+
+
+// posts de cães perdido -------------------------------------------------------------------------
+
+router.post('/caesperdidos', verifyJWT, async(req, res) => {
+  console.log(req.body);
+  moment.locale('pt-br');  
+  try{
+    const perdido = {
+        id: Math.random() + Math.random(),
+        descricao: req.body.descricao,
+        animal: req.body.animal,
+        caracteristicas: req.body.caracteristicas,        
+        hora: moment().format('LT'),
+        data: moment().format('LL'),
+        longitude: req.body.longitude,
+        latitude: req.body.latitude,
+    }
+    const user = await User.updateOne(      
+      { email: req.body.email },
+      { $push: {'perdidos': achado}}, 
+      { new: true, useFindAndModify: false });
+      return res.send((perdido));    
+  }catch(error){
+    console.log(error)
+    return res.status(400).send({ error: 'Registration failed' });  
+  }
+});
+
+
+// logout do sistema -------------------------------------------------------------------------
+
+router.post('/logout', async(req, res) =>{  
+  res.send({auth: false, token: null})
+});
+
+
+
+
+
+
+
+
+// função de verificação do Token ------------------------------------------------------------
+
+function verifyJWT(req, res, next){    
   const token = req.headers['x-access-token']; 
   if (!token) return res.status(403).json({ auth: false, message: 'No token provided.' });
   
@@ -99,25 +199,11 @@ function verifyJWT(req, res, next){  // função de verificação do Token
   });
 }
 
-router.post('/logout', async(req, res) =>{  // logout do sistema
-  res.send({auth: false, token: null})
-});
-
-router.delete('/deleteUser', async(req, res) =>{ //recebe um parametro com email do usuario para deletar do banco de dados  
-  const { email } = req.body;
-  const user = await User.findOne({email});
-
-  await user.remove();
-  return res.send();    
-
-});
 
 
 
 
-
-
-//Area de rotas para testes
+//Area de rotas para testes --------------------------------------------------------------------
 
 router.post('/postImage', multer(multerConfig).single("file"), async(req, res) =>{  
   console.log(req.file);
@@ -127,7 +213,88 @@ router.post('/postImage', multer(multerConfig).single("file"), async(req, res) =
 
 router.get('/client', verifyJWT, async(req, res, next) =>{ // GET de teste
   // console.log('body do get:', req.userId);
+  
   console.log("Retornou todos clientes!");  
 });
+
+
+
+
+router.post('/obterLatLong', async(req, res) => {  //recebe um parametro com os dados do usuario e registra no banco de dados
+  const body = req.body;
+  try{
+    await CepCoords.getByCep(req.body.cep)
+    .then(info => {
+      body.latUser = info.lat;
+      body.lonUser = info.lon;      
+       //retorna o mesmo 'info' da versão em promise
+    })
+    .catch((error) => {
+      return res.status(400).send({ error: 'Invalid Zip Code' });  
+       //retorna o mesmo parâmetro 'err' da versão em promise
+    })         
+    return res.send({body});
+  }catch(error){
+    return res.status(400).send({ error: 'Registration failed' });    
+  }
+});
+
+
+
+// router.post('/rotamulter', multer(multerConfig).single("file"), async(req, res, next) =>{    // post de autenticação 
+//   const { email, senha } = req.body; 
+//   console.log(req.body)
+//   console.log('req ', req.file)
+  
+//   if(!req.body.senha && !req.body.tokenGoogle){ 
+//     return res.status(400).send({ error: 'Erro senha e token vazios' });
+//   }else{      
+//     const { originalname: nomeFoto, size: tamanho, key, location: url = ""} = req.file;
+//     if(req.body.tokenGoogle && !req.body.senha){ 
+//       const user = await User.findOne({email}).select('+tokenGoogle'); 
+//       //tentando logar ou criar via google
+//       if(!user){ 
+//         const userInfo = { 
+//           foto: {
+//             nomeFoto,
+//             tamanho,
+//             key,
+//             url
+//           },
+//           ...req.body
+//         };          
+//         const user = await User.create(userInfo);
+//         const token = jwt.sign({ tokenGoogle: req.body.tokenGoogle }, process.env.SECRET, { 
+//           // expiresIn: 300  //expira em 5 min o token
+//         });
+//         return res.send({ auth: true, user, token }); 
+//       }else{          
+//         const token = jwt.sign({ tokenGoogle: req.body.tokenGoogle }, process.env.SECRET, { 
+//           // expiresIn: 300 //expira em 5 min o token
+//         });
+//         return res.send({ auth: true, user, token });  
+//       }
+//     }else if (!req.body.tokenGoogle && req.body.senha){ 
+//       const user = await User.findOne({email}).select('+senha');
+//       if(!user.senha)
+//         return res.status(400).send({error: 'Usuario já tem cadastro pela google'});
+//       //tentando fazer login normal  
+//       if(!user)
+//         return res.status(400).send({error: 'Usuario nao encontrado'});      
+//       if(!await bcrypt.compare(senha, user.senha))
+//         return res.status(400).send({error: 'Senha invalida'});  
+//       const token = jwt.sign({ senha: req.body.senha }, process.env.SECRET, { 
+//         // expiresIn: 300 //expira em 5 min o token
+//       });
+//       res.send({auth: true, user, token});
+//     }else {        
+//       return res.status(400).send({ error: 'Login indevido' }); 
+//     }
+//   }
+// });
+
+
+
+
 
 module.exports = app => app.use('/users', router);
