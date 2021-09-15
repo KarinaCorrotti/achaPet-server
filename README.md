@@ -1,4 +1,4 @@
-# achaPet-server
+# AchaPet - server
 
 ## Descrição
 <p align="center">AchaPet Server é o meu TCC que está em desenvolvimento, utilizando as tecnologias NodeJs, Express, MongoDB, Multer e AWS</p>
