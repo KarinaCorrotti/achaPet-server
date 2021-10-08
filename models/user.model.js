@@ -14,6 +14,7 @@ const UserSchema = new mongoose.Schema({
     nome: { type: String, required: true},
     email: { type: String, require: true},
     senha: { type: String, required: false, select: false},
+    celular: {type: Number, required: false, select: false}, 
     tokenGoogle: { type: String, require: false, select: false},
     latitude: { type: Number, required: false, select: false},
     longitude: { type: Number, required: false, select: false},

@@ -6,6 +6,8 @@ const multerConfig = require('../config/multer');
 const path = require('path');
 const aws = require('aws-sdk');
 const moment = require('moment');
+
+
 const User = require('../models/user.model');
 const CepCoords = require("coordenadas-do-cep");
 
@@ -114,71 +116,12 @@ router.put('/updateUser', verifyJWT, async(req, res) => {
 });
 
 
-// posts de cães achados -------------------------------------------------------------------------
-
-router.post('/caesachados', verifyJWT, async(req, res) => {
-  console.log(req.body);
-  moment.locale('pt-br');  
-  try{
-    const achado = {
-        id: Math.random() + Math.random(),
-        descricao: req.body.descricao,
-        animal: req.body.animal,
-        caracteristicas: req.body.caracteristicas,        
-        hora: moment().format('LT'),
-        data: moment().format('LL'),
-        longitude: req.body.longitude,
-        latitude: req.body.latitude,
-    }
-    const user = await User.updateOne(      
-      { email: req.body.email },
-      { $push: {'achados': achado}}, 
-      { new: true, useFindAndModify: false });
-      return res.send((achado));    
-  }catch(error){
-    console.log(error)
-    return res.status(400).send({ error: 'Registration failed' });  
-  }
-});
-
-
-// posts de cães perdido -------------------------------------------------------------------------
-
-router.post('/caesperdidos', verifyJWT, async(req, res) => {
-  console.log(req.body);
-  moment.locale('pt-br');  
-  try{
-    const perdido = {
-        id: Math.random() + Math.random(),
-        descricao: req.body.descricao,
-        animal: req.body.animal,
-        caracteristicas: req.body.caracteristicas,        
-        hora: moment().format('LT'),
-        data: moment().format('LL'),
-        longitude: req.body.longitude,
-        latitude: req.body.latitude,
-    }
-    const user = await User.updateOne(      
-      { email: req.body.email },
-      { $push: {'perdidos': achado}}, 
-      { new: true, useFindAndModify: false });
-      return res.send((perdido));    
-  }catch(error){
-    console.log(error)
-    return res.status(400).send({ error: 'Registration failed' });  
-  }
-});
-
 
 // logout do sistema -------------------------------------------------------------------------
 
 router.post('/logout', async(req, res) =>{  
   res.send({auth: false, token: null})
 });
-
-
-
-
 
 
 
