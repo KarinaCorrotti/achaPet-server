@@ -40,7 +40,7 @@ router.post('/', verifyJWT, async(req, res) => {
           { email: req.body.email },
           { $push: {'achados': achado}}, 
           { new: true, useFindAndModify: false });
-          return res.send((achado, user));    
+          return res.send((achado));    
       }catch(error){
         console.log(error)
         return res.status(400).send({ error: 'Registration failed' });  
@@ -63,7 +63,7 @@ router.post('/', verifyJWT, async(req, res) => {
           { email: req.body.email },
           { $push: {'perdidos': perdido}}, 
           { new: true, useFindAndModify: false });
-          return res.send((perdido, user));    
+          return res.send((perdido));    
       }catch(error){
         console.log(error)
         return res.status(400).send({ error: 'Registration failed' });  
