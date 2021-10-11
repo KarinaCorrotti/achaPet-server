@@ -28,11 +28,14 @@ router.post('/', verifyJWT, async(req, res) => {
             id: Math.random() + Math.random(),
             email: req.body.email,
             nome: req.body.nome,
-            descricao: req.body.descricao,
-            animal: req.body.animal,
+            celular: req.body.celular,
+            nomeAnimal: req.body.nomeAnimal,
+            animalTipo: req.body.animal,
+            raca: req.body.raca,        
+            cor: req.body.cor,      
             caracteristicas: req.body.caracteristicas,        
-            hora: moment().format('LT'),
-            data: moment().format('LL'),
+            hora: moment().format('LTS'),
+            data: moment().format('YYYY-MM-DD'),            
             latitude: req.body.latitude,
             longitude: req.body.longitude,        
         }
@@ -51,11 +54,14 @@ router.post('/', verifyJWT, async(req, res) => {
             id: Math.random() + Math.random(),
             email: req.body.email,
             nome: req.body.nome,
-            descricao: req.body.descricao,
-            animal: req.body.animal,
+            celular: req.body.celular,
+            nomeAnimal: req.body.nomeAnimal,
+            animalTipo: req.body.animal,                
+            raca: req.body.raca,    
+            cor: req.body.cor,      
             caracteristicas: req.body.caracteristicas,        
-            hora: moment().format('LT'),
-            data: moment().format('LL'),
+            hora: moment().format('LTS'),
+            data: moment().format('YYYY-MM-DD'),
             longitude: req.body.longitude,
             latitude: req.body.latitude,
         }
@@ -94,7 +100,39 @@ router.get('/list', verifyJWT, async(req, res) => {
           listaFinal.push(pet)
       })
     })
-    return res.status(200).send(listaFinal)
+    const sortedList = listaFinal.sort((v1, v2) => {                         
+      return `${v1.data + '-' + v1.hora}` > `${v2.data + '-' + v2.hora}` ? 1 : `${v1.data + '-' + v1.hora}` === `${v2.data + '-' + v2.hora}` ? 0 : -1
+    })       
+    return res.status(200).send(sortedList)
+  }catch(error){
+    return res.status(400).send({ error: 'Error' }); 
+  }
+})
+
+router.get('/listAnimal', verifyJWT, async(req, res) => {
+  const radius = 0.10
+  const maxUserLat = parseFloat(req.query.latitude) + radius;
+  const maxUserLon = parseFloat(req.query.longitude) + radius;
+  const minUserLat = parseFloat(req.query.latitude) - radius;
+  const minUserLon = parseFloat(req.query.longitude) - radius;  
+  console.log('tipo', req.query.animal)
+  try{
+    const listUser = await User.find()    
+    const listaFinal = [];
+    listUser.forEach((user) => {
+      const petList = req.query.tipo === 'achados' ? user.achados : user.perdidos
+      petList.forEach((pet) =>{   
+        if(pet.animal === req.query.animal)     
+          if(pet.latitude <= maxUserLat && pet.latitude >= minUserLat && 
+            pet.longitude <= maxUserLon && pet.longitude >= minUserLon)
+            listaFinal.push(pet)
+      })
+    })
+    const sortedList = listaFinal.sort((v1, v2) => {                         
+      return `${v1.data + '-' + v1.hora}` > `${v2.data + '-' + v2.hora}` ? 1 : `${v1.data + '-' + v1.hora}` === `${v2.data + '-' + v2.hora}` ? 0 : -1
+    })
+       
+    return res.status(200).send(sortedList)
   }catch(error){
     return res.status(400).send({ error: 'Error' }); 
   }

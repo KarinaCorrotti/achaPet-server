@@ -91,13 +91,17 @@ router.post('/authenticate', async(req, res) =>{    // post de autenticação
 
 
 
-router.delete('/deleteUser', async(req, res) =>{ //recebe um parametro com email do usuario para deletar do banco de dados  
+router.delete('/deleteUser', verifyJWT, async(req, res) =>{ //recebe um parametro com email do usuario para deletar do banco de dados  
   const { email } = req.body;
-  const user = await User.findOne({email});
-
-  await user.remove();
-  return res.send();    
-
+  try{
+      const user = await User.findOneAndDelete({email});
+    if(user.foto.key){
+      await user.remove();
+    }  
+    return res.status(200).send('Usuario  deletado com sucesso');    
+  }catch(error){
+    return res.status(400).send({ error: 'Error update user' });
+  }  
 });
 
 router.put('/updateUser', verifyJWT, async(req, res) => {
@@ -113,6 +117,28 @@ router.put('/updateUser', verifyJWT, async(req, res) => {
   }catch(error){    
     return res.status(400).send({ error: 'Error update user' });    
   }  
+});
+
+
+router.put('/putFoto', verifyJWT, multer(multerConfig).single("file"), async(req, res) =>{  
+  console.log(req.file);
+  const { originalname: nomeFoto, size: tamanho, key, location: url = ""} = req.file;
+  try{    
+    const user = await User.findOneAndUpdate(
+      { email: req.body.email }, 
+      { $set: { foto: {
+          nomeFoto,
+          tamanho,
+          key,
+          url
+        }
+      }},
+      { new: true, useFindAndModify: false });             
+    return res.send((user));
+  }catch(error){    
+    return res.status(400).send({ error: 'Error update user' });    
+  }   
+  // return res.json({ hello: "DEU CERTO" })
 });
 
 
@@ -159,9 +185,6 @@ router.get('/client', verifyJWT, async(req, res, next) =>{ // GET de teste
   
   console.log("Retornou todos clientes!");  
 });
-
-
-
 
 router.post('/obterLatLong', async(req, res) => {  //recebe um parametro com os dados do usuario e registra no banco de dados
   const body = req.body;

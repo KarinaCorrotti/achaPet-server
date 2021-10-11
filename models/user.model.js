@@ -20,13 +20,13 @@ const UserSchema = new mongoose.Schema({
     longitude: { type: Number, required: false, select: false},
     achados: { type: Array, require: false, default: []},
     perdidos: { type: Array, require: false, default: []},
-    // foto: {
-    //     nomeFoto: {type: String, require: false},
-    //     tamanho: {type: Number, require: false},
-    //     key: {type: String, require: false},
-    //     url: {type: String, require: false},
-    //     createdAt: {type: Date, default: Date.now, require: false}
-    // }
+    foto: {
+        nomeFoto: {type: String, require: false},
+        tamanho: {type: Number, require: false},
+        key: {type: String, require: false},
+        url: {type: String, require: false},
+        createdAt: {type: Date, default: Date.now, require: false}
+    }
 });
 
 
