@@ -30,7 +30,7 @@ router.post('/', verifyJWT, async(req, res) => {
             nome: req.body.nome,
             celular: req.body.celular,
             nomeAnimal: req.body.nomeAnimal,
-            animalTipo: req.body.animal,
+            animalTipo: req.body.animalTipo,
             raca: req.body.raca,        
             cor: req.body.cor,      
             caracteristicas: req.body.caracteristicas,        
@@ -56,7 +56,7 @@ router.post('/', verifyJWT, async(req, res) => {
             nome: req.body.nome,
             celular: req.body.celular,
             nomeAnimal: req.body.nomeAnimal,
-            animalTipo: req.body.animal,                
+            animalTipo: req.body.animalTipo,                
             raca: req.body.raca,    
             cor: req.body.cor,      
             caracteristicas: req.body.caracteristicas,        
@@ -122,7 +122,7 @@ router.get('/listAnimal', verifyJWT, async(req, res) => {
     listUser.forEach((user) => {
       const petList = req.query.tipo === 'achados' ? user.achados : user.perdidos
       petList.forEach((pet) =>{   
-        if(pet.animal === req.query.animal)     
+        if(pet.animalTipo === req.query.animalTipo)     
           if(pet.latitude <= maxUserLat && pet.latitude >= minUserLat && 
             pet.longitude <= maxUserLon && pet.longitude >= minUserLon)
             listaFinal.push(pet)
