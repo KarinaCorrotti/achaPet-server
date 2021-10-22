@@ -41,11 +41,10 @@ UserSchema.pre('save', async function(next){
             this.foto.url = `${process.env.APP_URL}/files/${this.foto.key}`;
             next();
         }
-    }
-    
+    }    
 });
 
-UserSchema.pre('remove', async function(){    
+UserSchema.pre('remove', async function(){           
     if(this.foto){
         if (process.env.STORAGE_TYPE === 's3'){
             return s3.deleteObject({
@@ -55,7 +54,7 @@ UserSchema.pre('remove', async function(){
         } else {
             return promisify(fs.unlink)(path.resolve(__dirname, '..', 'tmp', 'uploads', this.foto.key));
         }
-    }     
+    } 
 })
 
 

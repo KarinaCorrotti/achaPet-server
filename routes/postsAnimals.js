@@ -17,86 +17,189 @@ require("dotenv").config();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
-//cães postsAnimals -------------------------------------------------------------------------
+// postsAnimals -------------------------------------------------------------------------
 
-router.post('/', verifyJWT, async(req, res) => {
-    console.log(req.body);
-    moment.locale('pt-br');  
-    if(req.body.tipo === 'achado'){
-      try{
-        const achado = {
-            id: Math.random() + Math.random(),
-            email: req.body.email,
-            nome: req.body.nome,
-            celular: req.body.celular,
-            nomeAnimal: req.body.nomeAnimal,
-            animalTipo: req.body.animalTipo,
-            raca: req.body.raca,        
-            cor: req.body.cor,      
-            caracteristicas: req.body.caracteristicas,        
-            hora: moment().format('LTS'),
-            data: moment().format('YYYY-MM-DD'),            
-            latitude: req.body.latitude,
-            longitude: req.body.longitude,        
-        }
-        const user = await User.updateOne(      
-          { email: req.body.email },
-          { $push: {'achados': achado}}, 
-          { new: true, useFindAndModify: false });
-          return res.send((achado));    
-      }catch(error){
-        console.log(error)
-        return res.status(400).send({ error: 'Registration failed' });  
-      }
-    }else if (req.body.tipo === 'perdido') {
-      try{
-        const perdido = {
-            id: Math.random() + Math.random(),
-            email: req.body.email,
-            nome: req.body.nome,
-            celular: req.body.celular,
-            nomeAnimal: req.body.nomeAnimal,
-            animalTipo: req.body.animalTipo,                
-            raca: req.body.raca,    
-            cor: req.body.cor,      
-            caracteristicas: req.body.caracteristicas,        
-            hora: moment().format('LTS'),
-            data: moment().format('YYYY-MM-DD'),
-            longitude: req.body.longitude,
-            latitude: req.body.latitude,
-        }
-        const user = await User.updateOne(      
-          { email: req.body.email },
-          { $push: {'perdidos': perdido}}, 
-          { new: true, useFindAndModify: false });
-          return res.send((perdido));    
-      }catch(error){
-        console.log(error)
-        return res.status(400).send({ error: 'Registration failed' });  
-      }
-    } else {
-      return res.status(400).send({ error: 'Tipo não selecionado' });
+router.post('/', verifyJWT, async(req, res) => {  
+  moment.locale('pt-br');  
+  try{
+    const tipo = {
+        id: Math.random() + Math.random(),
+        email: req.body.email,
+        nome: req.body.nome,
+        celular: req.body.celular,
+        nomeAnimal: req.body.nomeAnimal,
+        animalTipo: req.body.animalTipo,
+        raca: req.body.raca,        
+        cor: req.body.cor,      
+        caracteristicas: req.body.caracteristicas, 
+        status: req.body.status,        
+        hora: moment().format('LTS'),
+        data: moment().format('YYYY-MM-DD'),            
+        latitude: req.body.latitude,
+        longitude: req.body.longitude,   
+        fotos: [],     
+    }
+    const tipoPost = req.body.tipo;
+    if(tipoPost === 'achados') {
+      const user = await User.updateOne(      
+        { email: req.body.email },
+        { $push: {'achados': tipo}}, 
+        { new: true, useFindAndModify: false });
+        return res.send((tipo)); 
+    }else{
+      const user = await User.updateOne(      
+        { email: req.body.email },
+        { $push: {'perdidos': tipo}}, 
+        { new: true, useFindAndModify: false });
+        return res.send((tipo));  
+    }         
+  }catch(error){
+    console.log(error)
+    return res.status(400).send({ error: 'Registration failed' });  
+  }   
+});
+
+// delete de post de animais perdidos e achados ------------------------------
+
+router.delete('/deletePostsAnimals', verifyJWT, async(req, res) =>{ //recebe um parametro com ip do post para o delete
+  const id = parseFloat(req.body.id);
+  const email = req.body.email;
+  const tipoPost = req.body.tipo;   
+  try{
+    if(tipoPost === 'achados'){
+      await User.findOneAndUpdate(
+        { email: email},
+        { $pull: { achados: { id: id } } }, 
+        { new: true},
+      )
+    }else{
+      await User.findOneAndUpdate(
+        { email: email},
+        { $pull: { perdidos: { id: id } } }, 
+        { new: true},
+      )
+    }           
+    return res.status(200).send('Post deletado com sucesso');    
+  }catch(error){
+    console.log(error);
+    return res.status(400).send({ error: 'Error delete post' });
+  }  
+});
+
+// update de post animais perdidos e achados ---------------------------------
+
+router.put('/updatePostsAnimals', verifyJWT, async(req, res) => {  
+  const id = parseFloat(req.body.id);
+  const email = req.body.email;
+  const tipoPost = req.body.tipo;  
+  try{    
+    if(tipoPost === 'achados'){
+      const user = await User.findOneAndUpdate(
+        { email: email, "achados.id": id }, 
+        { $set: {"achados.$.celular": req.body.celular,
+          "achados.$.nomeAnimal": req.body.nomeAnimal,   
+          "achados.$.animalTipo": req.body.animalTipo,
+          "achados.$.raca": req.body.raca,
+          "achados.$.cor": req.body.cor,
+          "achados.$.caracteristicas": req.body.caracteristicas,
+          "achados.$.status": req.body.status,
+          "achados.$.latitude": req.body.latitude,
+          "achados.$.longitude": req.body.longitude,
+        }},
+        { new: true, useFindAndModify: false });             
+      return res.send((user.achados));
+    }else{
+      const user = await User.findOneAndUpdate(
+        { email: email, "perdidos.id": id }, 
+        { $set: {"achados.$.celular": req.body.celular,
+          "achados.$.nomeAnimal": req.body.nomeAnimal,   
+          "achados.$.animalTipo": req.body.animalTipo,
+          "achados.$.raca": req.body.raca,
+          "achados.$.cor": req.body.cor,
+          "achados.$.caracteristicas": req.body.caracteristicas,
+          "achados.$.status": req.body.status,
+          "achados.$.latitude": req.body.latitude,
+          "achados.$.longitude": req.body.longitude,
+        }},
+        { new: true, useFindAndModify: false });             
+      return res.send((user.perdidos));
     }    
-  });
+  }catch(error){    
+    return res.status(400).send({ error: 'Error update user' });    
+  }  
+});
+
+// update de fotos no post animais perdidos e achados ------------------------
+
+router.put('/fotoPostsAnimals', verifyJWT, multer(multerConfig).single("file"), async(req, res) => {  
+  const id = parseFloat(req.body.id);
+  const email = req.body.email;
+  const tipoPost = req.body.tipo;  
+  const { originalname: nomeFoto, size: tamanho, key, location: url = ""} = req.file; 
+
+  const objectFoto = {
+    idFoto: Math.random() + Math.random(),
+    nomeFoto: nomeFoto,
+    tamanho: tamanho,
+    key: key,
+    url: url
+  }
+  console.log('objectFoto: ', objectFoto)
+  try{    
+    if(tipoPost === 'achados'){
+      const user = await User.findOneAndUpdate(
+        { email: email, "achados.id": id }, 
+        { $push: { 'achados.$.fotos': objectFoto}},
+        { new: true, useFindAndModify: false });             
+      return res.send((user.achados));
+    }else{
+      const user = await User.findOneAndUpdate(
+        { email: email, "perdidos.id": id }, 
+        { $push: { 'perdidos.$.fotos': objectFoto}},
+        { new: true, useFindAndModify: false });             
+      return res.send((user.perdidos));
+    }    
+  }catch(error){    
+    return res.status(400).send({ error: 'Error post da foto' });    
+  }  
+});
+
+// update de fotos no post animais perdidos e achados ------------------------
+
+router.delete('/deleteFotoPostsAnimals', verifyJWT, multer(multerConfig).single("file"), async(req, res) => {  
+  const id = parseFloat(req.body.id);
+  const email = req.body.email;
+  const tipoPost = req.body.tipo;  
+  const idFoto = parseFloat(req.body.idfoto);  
+  try{    
+    if(tipoPost === 'achados'){
+      const user = await User.findOneAndUpdate(
+        { email: email, "achados.id": id},
+        { $pull: { 'achados.$.fotos': { idFoto: idFoto } } },         
+        { new: true, useFindAndModify: false });         
+      return res.send((user.achados));
+    }else{
+      const user = await User.findOneAndUpdate(
+        { email: email, "perdidos.id": id }, 
+        { $pull: { 'perdidos.$.fotos': { idFoto: idFoto } } },
+        { new: true, useFindAndModify: false });             
+      return res.send((user.perdidos));
+    }    
+  }catch(error){    
+    return res.status(400).send({ error: 'Error delete da foto' });    
+  }  
+});
 
 
 // lista de animais perdidos e achados ---------------------------------------
 
-router.get('/list', verifyJWT, async(req, res) => {
-  const radius = 0.10
-  const maxUserLat = parseFloat(req.query.latitude) + radius;
-  const maxUserLon = parseFloat(req.query.longitude) + radius;
-  const minUserLat = parseFloat(req.query.latitude) - radius;
-  const minUserLon = parseFloat(req.query.longitude) - radius;  
-  console.log('tipo', req.query.tipo)
+router.get('/list', verifyJWT, async(req, res) => {  
   try{
     const listUser = await User.find()    
     const listaFinal = [];
     listUser.forEach((user) => {
       const petList = req.query.tipo === 'achados' ? user.achados : user.perdidos
-      petList.forEach((pet) =>{        
-        if(pet.latitude <= maxUserLat && pet.latitude >= minUserLat && 
-          pet.longitude <= maxUserLon && pet.longitude >= minUserLon)
+      petList.forEach((pet) =>{               
           listaFinal.push(pet)
       })
     })
@@ -108,6 +211,33 @@ router.get('/list', verifyJWT, async(req, res) => {
     return res.status(400).send({ error: 'Error' }); 
   }
 })
+
+// router.get('/list', verifyJWT, async(req, res) => {
+//   const radius = 0.10
+//   const maxUserLat = parseFloat(req.query.latitude) + radius;
+//   const maxUserLon = parseFloat(req.query.longitude) + radius;
+//   const minUserLat = parseFloat(req.query.latitude) - radius;
+//   const minUserLon = parseFloat(req.query.longitude) - radius;  
+//   console.log('tipo', req.query.tipo)
+//   try{
+//     const listUser = await User.find()    
+//     const listaFinal = [];
+//     listUser.forEach((user) => {
+//       const petList = req.query.tipo === 'achados' ? user.achados : user.perdidos
+//       petList.forEach((pet) =>{        
+//         if(pet.latitude <= maxUserLat && pet.latitude >= minUserLat && 
+//           pet.longitude <= maxUserLon && pet.longitude >= minUserLon)
+//           listaFinal.push(pet)
+//       })
+//     })
+//     const sortedList = listaFinal.sort((v1, v2) => {                         
+//       return `${v1.data + '-' + v1.hora}` > `${v2.data + '-' + v2.hora}` ? 1 : `${v1.data + '-' + v1.hora}` === `${v2.data + '-' + v2.hora}` ? 0 : -1
+//     })       
+//     return res.status(200).send(sortedList)
+//   }catch(error){
+//     return res.status(400).send({ error: 'Error' }); 
+//   }
+// })
 
 router.get('/listAnimal', verifyJWT, async(req, res) => {
   const radius = 0.10
@@ -130,8 +260,7 @@ router.get('/listAnimal', verifyJWT, async(req, res) => {
     })
     const sortedList = listaFinal.sort((v1, v2) => {                         
       return `${v1.data + '-' + v1.hora}` > `${v2.data + '-' + v2.hora}` ? 1 : `${v1.data + '-' + v1.hora}` === `${v2.data + '-' + v2.hora}` ? 0 : -1
-    })
-       
+    })       
     return res.status(200).send(sortedList)
   }catch(error){
     return res.status(400).send({ error: 'Error' }); 

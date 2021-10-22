@@ -89,10 +89,9 @@ router.post('/authenticate', async(req, res) =>{    // post de autenticação
     }
 });
 
-
-
 router.delete('/deleteUser', verifyJWT, async(req, res) =>{ //recebe um parametro com email do usuario para deletar do banco de dados  
   const { email } = req.body;
+  
   try{
       const user = await User.findOneAndDelete({email});
     if(user.foto.key){
@@ -100,17 +99,19 @@ router.delete('/deleteUser', verifyJWT, async(req, res) =>{ //recebe um parametr
     }  
     return res.status(200).send('Usuario  deletado com sucesso');    
   }catch(error){
-    return res.status(400).send({ error: 'Error update user' });
+    return res.status(400).send({ error: 'Error delete user' });
   }  
 });
 
-router.put('/updateUser', verifyJWT, async(req, res) => {
-  console.log("dentro da rota de Update");  
+router.put('/updateUser', verifyJWT, async(req, res) => {   
   try{    
     const user = await User.findOneAndUpdate(
       { email: req.body.email }, 
       { $set: {nome: req.body.nome,
       email: req.body.email,
+      celular: req.body.celular,
+      latitude: req.body.latitude,
+      longitude: req.body.longitude,
       }},
       { new: true, useFindAndModify: false });             
     return res.send((user));
@@ -170,8 +171,6 @@ function verifyJWT(req, res, next){
 
 
 
-
-
 //Area de rotas para testes --------------------------------------------------------------------
 
 router.post('/postImage', multer(multerConfig).single("file"), async(req, res) =>{  
@@ -204,63 +203,5 @@ router.post('/obterLatLong', async(req, res) => {  //recebe um parametro com os 
     return res.status(400).send({ error: 'Registration failed' });    
   }
 });
-
-
-
-// router.post('/rotamulter', multer(multerConfig).single("file"), async(req, res, next) =>{    // post de autenticação 
-//   const { email, senha } = req.body; 
-//   console.log(req.body)
-//   console.log('req ', req.file)
-  
-//   if(!req.body.senha && !req.body.tokenGoogle){ 
-//     return res.status(400).send({ error: 'Erro senha e token vazios' });
-//   }else{      
-//     const { originalname: nomeFoto, size: tamanho, key, location: url = ""} = req.file;
-//     if(req.body.tokenGoogle && !req.body.senha){ 
-//       const user = await User.findOne({email}).select('+tokenGoogle'); 
-//       //tentando logar ou criar via google
-//       if(!user){ 
-//         const userInfo = { 
-//           foto: {
-//             nomeFoto,
-//             tamanho,
-//             key,
-//             url
-//           },
-//           ...req.body
-//         };          
-//         const user = await User.create(userInfo);
-//         const token = jwt.sign({ tokenGoogle: req.body.tokenGoogle }, process.env.SECRET, { 
-//           // expiresIn: 300  //expira em 5 min o token
-//         });
-//         return res.send({ auth: true, user, token }); 
-//       }else{          
-//         const token = jwt.sign({ tokenGoogle: req.body.tokenGoogle }, process.env.SECRET, { 
-//           // expiresIn: 300 //expira em 5 min o token
-//         });
-//         return res.send({ auth: true, user, token });  
-//       }
-//     }else if (!req.body.tokenGoogle && req.body.senha){ 
-//       const user = await User.findOne({email}).select('+senha');
-//       if(!user.senha)
-//         return res.status(400).send({error: 'Usuario já tem cadastro pela google'});
-//       //tentando fazer login normal  
-//       if(!user)
-//         return res.status(400).send({error: 'Usuario nao encontrado'});      
-//       if(!await bcrypt.compare(senha, user.senha))
-//         return res.status(400).send({error: 'Senha invalida'});  
-//       const token = jwt.sign({ senha: req.body.senha }, process.env.SECRET, { 
-//         // expiresIn: 300 //expira em 5 min o token
-//       });
-//       res.send({auth: true, user, token});
-//     }else {        
-//       return res.status(400).send({ error: 'Login indevido' }); 
-//     }
-//   }
-// });
-
-
-
-
 
 module.exports = app => app.use('/users', router);
