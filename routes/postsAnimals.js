@@ -170,7 +170,6 @@ router.delete('/deleteFotoPostsAnimals', verifyJWT, multer(multerConfig).single(
   const tipoPost = req.body.tipo;  
   const idFoto = parseFloat(req.body.idfoto);  
   try{       
-
     if(tipoPost === 'achados'){
       const user = await User.findOneAndUpdate(
         { email: email, "achados.id": id},
@@ -220,6 +219,30 @@ router.get('/listAtributoAnimal', verifyJWT, async(req, res) => {
       const petList = req.query.tipo === 'achados' ? user.achados : user.perdidos
       petList.forEach((pet) =>{   
         if(pet[atributo] === descricao)   
+          listaFinal.push(pet)
+      })
+    })
+    const sortedList = listaFinal.sort((v1, v2) => {                         
+      return `${v1.data + '-' + v1.hora}` > `${v2.data + '-' + v2.hora}` ? 1 : `${v1.data + '-' + v1.hora}` === `${v2.data + '-' + v2.hora}` ? 0 : -1
+    })       
+    return res.status(200).send(sortedList)
+  }catch(error){
+    return res.status(400).send({ error: 'Error' }); 
+  }
+})
+
+router.get('/listAtributoSecondAnimal', verifyJWT, async(req, res) => {    
+  const descricao = req.query.descricao;
+  const atributo = req.query.atributo;
+  const descricaoSecond = req.query.descricaoSecond;
+  const atributoSecond = req.query.atributoSecond;
+  try{
+    const listUser = await User.find()    
+    const listaFinal = [];
+    listUser.forEach((user) => {
+      const petList = req.query.tipo === 'achados' ? user.achados : user.perdidos
+      petList.forEach((pet) =>{   
+        if(pet[atributo] === descricao && pet[atributoSecond] === descricaoSecond)   
           listaFinal.push(pet)
       })
     })
