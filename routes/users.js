@@ -20,7 +20,7 @@ const jwt = require('jsonwebtoken');
 
  
 
-router.post('/create', async(req, res) => {  // post para criação de usuário com senha
+router.post('/create', async(req, res) => {  
   console.log(req.body)
     if(!req.body.senha){ 
         return res.status(400).send({ error: 'Erro, senha vazia' });

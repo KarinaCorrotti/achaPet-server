@@ -136,28 +136,26 @@ router.put('/fotoPostsAnimals', verifyJWT, multer(multerConfig).single("file"), 
   const email = req.body.email;
   const tipoPost = req.body.tipo;  
   const { originalname: nomeFoto, size: tamanho, key, location: url = ""} = req.file; 
-
   const objectFoto = {
     idFoto: Math.random() + Math.random(),
     nomeFoto: nomeFoto,
     tamanho: tamanho,
     key: key,
     url: url
-  }
-  console.log('objectFoto: ', objectFoto)
+  }  
   try{    
     if(tipoPost === 'achados'){
       const user = await User.findOneAndUpdate(
         { email: email, "achados.id": id }, 
         { $push: { 'achados.$.fotos': objectFoto}},
         { new: true, useFindAndModify: false });             
-      return res.send((user.achados));
+      return res.status(200).send((objectFoto.url));
     }else{
       const user = await User.findOneAndUpdate(
         { email: email, "perdidos.id": id }, 
         { $push: { 'perdidos.$.fotos': objectFoto}},
         { new: true, useFindAndModify: false });             
-      return res.send((user.perdidos));
+      return res.status(200).send((objectFoto.url));
     }    
   }catch(error){    
     return res.status(400).send({ error: 'Error post da foto' });    
@@ -171,25 +169,25 @@ router.delete('/deleteFotoPostsAnimals', verifyJWT, multer(multerConfig).single(
   const email = req.body.email;
   const tipoPost = req.body.tipo;  
   const idFoto = parseFloat(req.body.idfoto);  
-  try{    
+  try{       
+
     if(tipoPost === 'achados'){
       const user = await User.findOneAndUpdate(
         { email: email, "achados.id": id},
         { $pull: { 'achados.$.fotos': { idFoto: idFoto } } },         
         { new: true, useFindAndModify: false });         
-      return res.send((user.achados));
+      return res.status(200);
     }else{
       const user = await User.findOneAndUpdate(
         { email: email, "perdidos.id": id }, 
         { $pull: { 'perdidos.$.fotos': { idFoto: idFoto } } },
         { new: true, useFindAndModify: false });             
-      return res.send((user.perdidos));
+      return res.status(200);
     }    
   }catch(error){    
     return res.status(400).send({ error: 'Error delete da foto' });    
   }  
 });
-
 
 // lista de animais perdidos e achados ---------------------------------------
 
@@ -200,6 +198,28 @@ router.get('/list', verifyJWT, async(req, res) => {
     listUser.forEach((user) => {
       const petList = req.query.tipo === 'achados' ? user.achados : user.perdidos
       petList.forEach((pet) =>{               
+          listaFinal.push(pet)
+      })
+    })
+    const sortedList = listaFinal.sort((v1, v2) => {                         
+      return `${v1.data + '-' + v1.hora}` > `${v2.data + '-' + v2.hora}` ? 1 : `${v1.data + '-' + v1.hora}` === `${v2.data + '-' + v2.hora}` ? 0 : -1
+    })       
+    return res.status(200).send(sortedList)
+  }catch(error){
+    return res.status(400).send({ error: 'Error' }); 
+  }
+})
+
+router.get('/listAtributoAnimal', verifyJWT, async(req, res) => {    
+  const descricao = req.query.descricao;
+  const atributo = req.query.atributo;
+  try{
+    const listUser = await User.find()    
+    const listaFinal = [];
+    listUser.forEach((user) => {
+      const petList = req.query.tipo === 'achados' ? user.achados : user.perdidos
+      petList.forEach((pet) =>{   
+        if(pet[atributo] === descricao)   
           listaFinal.push(pet)
       })
     })
@@ -239,34 +259,33 @@ router.get('/list', verifyJWT, async(req, res) => {
 //   }
 // })
 
-router.get('/listAnimal', verifyJWT, async(req, res) => {
-  const radius = 0.10
-  const maxUserLat = parseFloat(req.query.latitude) + radius;
-  const maxUserLon = parseFloat(req.query.longitude) + radius;
-  const minUserLat = parseFloat(req.query.latitude) - radius;
-  const minUserLon = parseFloat(req.query.longitude) - radius;  
-  console.log('tipo', req.query.animal)
-  try{
-    const listUser = await User.find()    
-    const listaFinal = [];
-    listUser.forEach((user) => {
-      const petList = req.query.tipo === 'achados' ? user.achados : user.perdidos
-      petList.forEach((pet) =>{   
-        if(pet.animalTipo === req.query.animalTipo)     
-          if(pet.latitude <= maxUserLat && pet.latitude >= minUserLat && 
-            pet.longitude <= maxUserLon && pet.longitude >= minUserLon)
-            listaFinal.push(pet)
-      })
-    })
-    const sortedList = listaFinal.sort((v1, v2) => {                         
-      return `${v1.data + '-' + v1.hora}` > `${v2.data + '-' + v2.hora}` ? 1 : `${v1.data + '-' + v1.hora}` === `${v2.data + '-' + v2.hora}` ? 0 : -1
-    })       
-    return res.status(200).send(sortedList)
-  }catch(error){
-    return res.status(400).send({ error: 'Error' }); 
-  }
-})
-
+// router.get('/listAnimal', verifyJWT, async(req, res) => {
+//   const radius = 0.10
+//   const maxUserLat = parseFloat(req.query.latitude) + radius;
+//   const maxUserLon = parseFloat(req.query.longitude) + radius;
+//   const minUserLat = parseFloat(req.query.latitude) - radius;
+//   const minUserLon = parseFloat(req.query.longitude) - radius;  
+//   console.log('tipo', req.query.animal)
+//   try{
+//     const listUser = await User.find()    
+//     const listaFinal = [];
+//     listUser.forEach((user) => {
+//       const petList = req.query.tipo === 'achados' ? user.achados : user.perdidos
+//       petList.forEach((pet) =>{   
+//         if(pet.animalTipo === req.query.animalTipo)     
+//           if(pet.latitude <= maxUserLat && pet.latitude >= minUserLat && 
+//             pet.longitude <= maxUserLon && pet.longitude >= minUserLon)
+//             listaFinal.push(pet)
+//       })
+//     })
+//     const sortedList = listaFinal.sort((v1, v2) => {                         
+//       return `${v1.data + '-' + v1.hora}` > `${v2.data + '-' + v2.hora}` ? 1 : `${v1.data + '-' + v1.hora}` === `${v2.data + '-' + v2.hora}` ? 0 : -1
+//     })       
+//     return res.status(200).send(sortedList)
+//   }catch(error){
+//     return res.status(400).send({ error: 'Error' }); 
+//   }
+// })
 
 // função de verificação do Token ------------------------------------------------------------
 
