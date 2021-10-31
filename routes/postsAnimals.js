@@ -19,7 +19,7 @@ const jwt = require('jsonwebtoken');
 
 // postsAnimals -------------------------------------------------------------------------
 
-router.post('/', verifyJWT, async(req, res) => {  
+router.post('/postagem', verifyJWT, async(req, res) => {  
   moment.locale('pt-br');  
   try{
     const tipo = {
@@ -192,7 +192,7 @@ router.delete('/deleteFotoPostsAnimals', verifyJWT, multer(multerConfig).single(
 
 router.get('/list', verifyJWT, async(req, res) => {  
   try{
-    const listUser = await User.find()    
+    const listUser = await User.find()  
     const listaFinal = [];
     listUser.forEach((user) => {
       const petList = req.query.tipo === 'achados' ? user.achados : user.perdidos
@@ -254,6 +254,7 @@ router.get('/listAtributoSecondAnimal', verifyJWT, async(req, res) => {
     return res.status(400).send({ error: 'Error' }); 
   }
 })
+
 
 // router.get('/list', verifyJWT, async(req, res) => {
 //   const radius = 0.10
