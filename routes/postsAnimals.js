@@ -37,7 +37,7 @@ router.post('/postagem', verifyJWT, async(req, res) => {
         data: moment().format('YYYY-MM-DD'),            
         latitude: req.body.latitude,
         longitude: req.body.longitude,   
-        fotos: [],     
+        fotos: [req.body.fotos],     
     }
     const tipoPost = req.body.tipo;
     if(tipoPost === 'achados') {
@@ -131,36 +131,49 @@ router.put('/updatePostsAnimals', verifyJWT, async(req, res) => {
 
 // update de fotos no post animais perdidos e achados ------------------------
 
-router.put('/fotoPostsAnimals', verifyJWT, multer(multerConfig).single("file"), async(req, res) => {  
-  const id = parseFloat(req.body.id);
-  const email = req.body.email;
-  const tipoPost = req.body.tipo;  
+router.post('/fotoPostsAnimals', verifyJWT, multer(multerConfig).single("file"), async(req, res) => {   
+  console.log(req.file) 
   const { originalname: nomeFoto, size: tamanho, key, location: url = ""} = req.file; 
-  const objectFoto = {
-    idFoto: Math.random() + Math.random(),
-    nomeFoto: nomeFoto,
-    tamanho: tamanho,
-    key: key,
-    url: url
-  }  
-  try{    
-    if(tipoPost === 'achados'){
-      const user = await User.findOneAndUpdate(
-        { email: email, "achados.id": id }, 
-        { $push: { 'achados.$.fotos': objectFoto}},
-        { new: true, useFindAndModify: false });             
-      return res.status(200).send((objectFoto.url));
-    }else{
-      const user = await User.findOneAndUpdate(
-        { email: email, "perdidos.id": id }, 
-        { $push: { 'perdidos.$.fotos': objectFoto}},
-        { new: true, useFindAndModify: false });             
-      return res.status(200).send((objectFoto.url));
-    }    
+  try{       
+    return res.status(200).send((url));   
   }catch(error){    
+    console.log(error)
     return res.status(400).send({ error: 'Error post da foto' });    
   }  
 });
+
+
+
+// router.put('/fotoPostsAnimals', verifyJWT, multer(multerConfig).single("file"), async(req, res) => {  
+//   const id = parseFloat(req.body.id);
+//   const email = req.body.email;
+//   const tipoPost = req.body.tipo;  
+//   const { originalname: nomeFoto, size: tamanho, key, location: url = ""} = req.file; 
+//   const objectFoto = {
+//     idFoto: Math.random() + Math.random(),
+//     nomeFoto: nomeFoto,
+//     tamanho: tamanho,
+//     key: key,
+//     url: url
+//   }  
+//   try{    
+//     if(tipoPost === 'achados'){
+//       const user = await User.findOneAndUpdate(
+//         { email: email, "achados.id": id }, 
+//         { $push: { 'achados.$.fotos': objectFoto}},
+//         { new: true, useFindAndModify: false });             
+//       return res.status(200).send((objectFoto.url));
+//     }else{
+//       const user = await User.findOneAndUpdate(
+//         { email: email, "perdidos.id": id }, 
+//         { $push: { 'perdidos.$.fotos': objectFoto}},
+//         { new: true, useFindAndModify: false });             
+//       return res.status(200).send((objectFoto.url));
+//     }    
+//   }catch(error){    
+//     return res.status(400).send({ error: 'Error post da foto' });    
+//   }  
+// });
 
 // update de fotos no post animais perdidos e achados ------------------------
 
