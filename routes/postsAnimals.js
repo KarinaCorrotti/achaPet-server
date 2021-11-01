@@ -37,7 +37,7 @@ router.post('/postagem', verifyJWT, async(req, res) => {
         data: moment().format('YYYY-MM-DD'),            
         latitude: req.body.latitude,
         longitude: req.body.longitude,   
-        fotos: [req.body.fotos],     
+        fotos: req.body.fotos.split(','),     
     }
     const tipoPost = req.body.tipo;
     if(tipoPost === 'achados') {
