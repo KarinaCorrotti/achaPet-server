@@ -31,6 +31,7 @@ const UserSchema = new mongoose.Schema({
 
 
 UserSchema.pre('save', async function(next){    
+    console.log(this.senha) 
     if(this.senha){
         const hash = await bcrypt.hash(this.senha, 10);
         this.senha = hash;       
@@ -42,6 +43,14 @@ UserSchema.pre('save', async function(next){
             next();
         }
     }    
+});
+
+UserSchema.pre('findOneAndUpdate', async function(next){       
+    const user = this.getUpdate().$set;
+    if(user.senha){
+        user.senha = await bcrypt.hash(user.senha, 10);
+        next();
+    }          
 });
 
 UserSchema.pre('remove', async function(){           
