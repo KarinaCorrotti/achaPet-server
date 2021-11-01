@@ -44,6 +44,14 @@ UserSchema.pre('save', async function(next){
     }    
 });
 
+UserSchema.pre('update', async function(next){    
+    if(this.senha){
+        const hash = await bcrypt.hash(this.senha, 10);
+        this.senha = hash;       
+        next(); 
+    }       
+});
+
 UserSchema.pre('remove', async function(){           
     if(this.foto){
         if (process.env.STORAGE_TYPE === 's3'){

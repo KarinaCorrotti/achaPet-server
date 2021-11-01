@@ -109,6 +109,7 @@ router.put('/updateUser', verifyJWT, async(req, res) => {
       { email: req.body.email }, 
       { $set: {nome: req.body.nome,
       email: req.body.email,
+      senha: req.body.senha,
       celular: req.body.celular,
       latitude: req.body.latitude,
       longitude: req.body.longitude,

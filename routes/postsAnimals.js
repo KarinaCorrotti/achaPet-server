@@ -181,7 +181,7 @@ router.delete('/deleteFotoPostsAnimals', verifyJWT, multer(multerConfig).single(
   const id = parseFloat(req.body.id);
   const email = req.body.email;
   const tipoPost = req.body.tipo;  
-  const idFoto = parseFloat(req.body.idfoto);  
+  const urlFoto = parseFloat(req.body.urlFoto);  
   try{       
     if(tipoPost === 'achados'){
       const user = await User.findOneAndUpdate(
