@@ -13,6 +13,7 @@ app.use(bodyParser.urlencoded({limit: '50mb', extended: true}));
 app.use(cors());
 app.use('/files', express.static(path.resolve(__dirname, 'tmp', 'uploads')));
 app.use(express.json())
+app.options('*', cors());
 
 // var usersRouter = require('./routes/users');
 require('./routes/users')(app);
