@@ -116,16 +116,16 @@ router.put('/updateUser', verifyJWT, async(req, res) => {
 
 
 router.put('/putFoto', verifyJWT, multer(multerConfig).single("file"), async(req, res) =>{   
-  console.log(req) 
+  // console.log(req) 
   const { originalname: nomeFoto, size: tamanho, key, location: url = ""} = req.file;
   try{    
     const user = await User.findOneAndUpdate(
       { email: req.body.email }, 
       { $set: { foto: {
-          nomeFoto,
-          tamanho,
-          key,
-          url
+          nomeFoto: nomeFoto || '',
+          tamanho: tamanho || '',
+          key: key || '',
+          url: url || ''
         }
       }},
       { new: true, useFindAndModify: false });             
