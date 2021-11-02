@@ -133,7 +133,6 @@ router.put('/updatePostsAnimals', verifyJWT, async(req, res) => {
 // update de fotos no post animais perdidos e achados ------------------------
 
 router.post('/fotoPostsAnimals', verifyJWT, multer(multerConfig).single("file"), async(req, res) => {   
-  console.log(req.file) 
   const { originalname: nomeFoto, size: tamanho, key, location: url = ""} = req.file; 
   try{       
     return res.status(200).send((url));   
