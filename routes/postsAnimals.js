@@ -106,25 +106,26 @@ router.put('/updatePostsAnimals', verifyJWT, async(req, res) => {
           "achados.$.latitude": req.body.latitude,
           "achados.$.longitude": req.body.longitude,
         }},
-        { new: true, useFindAndModify: false });             
+        { new: true, useFindAndModify: false, omitUndefined:true });             
       return res.send((user.achados));
     }else{
       const user = await User.findOneAndUpdate(
         { email: email, "perdidos.id": id }, 
-        { $set: {"achados.$.celular": req.body.celular,
-          "achados.$.nomeAnimal": req.body.nomeAnimal,   
-          "achados.$.animalTipo": req.body.animalTipo,
-          "achados.$.raca": req.body.raca,
-          "achados.$.cor": req.body.cor,
-          "achados.$.caracteristicas": req.body.caracteristicas,
-          "achados.$.status": req.body.status,
-          "achados.$.latitude": req.body.latitude,
-          "achados.$.longitude": req.body.longitude,
+        { $set: {"perdidos.$.celular": req.body.celular,
+          "perdidos.$.nomeAnimal": req.body.nomeAnimal,   
+          "perdidos.$.animalTipo": req.body.animalTipo,
+          "perdidos.$.raca": req.body.raca,
+          "perdidos.$.cor": req.body.cor,
+          "perdidos.$.caracteristicas": req.body.caracteristicas,
+          "perdidos.$.status": req.body.status,
+          "perdidos.$.latitude": req.body.latitude,
+          "perdidos.$.longitude": req.body.longitude,
         }},
-        { new: true, useFindAndModify: false });             
+        { new: true, useFindAndModify: false, omitUndefined:true });             
       return res.send((user.perdidos));
     }    
   }catch(error){    
+    console.log(error)
     return res.status(400).send({ error: 'Error update user' });    
   }  
 });
