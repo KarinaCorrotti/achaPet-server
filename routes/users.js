@@ -116,7 +116,7 @@ router.put('/updateUser', verifyJWT, async(req, res) => {
 
 
 router.put('/putFoto', verifyJWT, multer(multerConfig).single("file"), async(req, res) =>{   
-  console.log(req) 
+  console.log(req.body) 
   const { originalname: nomeFoto, size: tamanho, key, location: url = ""} = req.file;
   try{    
     const user = await User.findOneAndUpdate(
