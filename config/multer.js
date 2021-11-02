@@ -19,14 +19,14 @@ const storageTypes = {
                 });      
         },
     }),
-    s3: multerS3({
+    s3: multerS3({        
         s3: new aws.S3(),
         bucket: 'achapet',
         contentType: multerS3.AUTO_CONTENT_TYPE,
         acl: 'public-read',        
         key: (req, file, cb) => {                                     
             crypto.randomBytes(16, (err, hash) => {
-                if (err) cb(err);
+                if (err) cb(err);                
                  file.key =  `${hash.toString('hex')}-${file.originalname}`;
                  cb(null, file.key);
             });             
@@ -49,6 +49,7 @@ module.exports = {
             'image/png'
         ];
         if (allowedMimes.includes(file.mimetype)) {
+            console.log('entrou')
             cb(null, true);
         } else {
             cb(new Error('Invalid file type'));
