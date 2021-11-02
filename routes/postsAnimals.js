@@ -177,26 +177,28 @@ router.post('/fotoPostsAnimals', verifyJWT, multer(multerConfig).single("file"),
 
 // update de fotos no post animais perdidos e achados ------------------------
 
-router.delete('/deleteFotoPostsAnimals', verifyJWT, multer(multerConfig).single("file"), async(req, res) => {  
+router.put('/deleteFotoPostsAnimals', verifyJWT, multer(multerConfig).single("file"), async(req, res) => {  
   const id = parseFloat(req.body.id);
   const email = req.body.email;
   const tipoPost = req.body.tipo;  
-  const urlFoto = parseFloat(req.body.urlFoto);  
+  const urlFoto = req.body.urlFoto;  
+  console.log(urlFoto)
   try{       
     if(tipoPost === 'achados'){
       const user = await User.findOneAndUpdate(
         { email: email, "achados.id": id},
-        { $pull: { 'achados.$.fotos': { idFoto: idFoto } } },         
+        { $pull: { 'achados.$.fotos': urlFoto } },         
         { new: true, useFindAndModify: false });         
-      return res.status(200);
+      return res.status(200).send('Foto deletada com sucesso');
     }else{
       const user = await User.findOneAndUpdate(
         { email: email, "perdidos.id": id }, 
-        { $pull: { 'perdidos.$.fotos': { idFoto: idFoto } } },
+        { $pull: { 'perdidos.$.fotos': urlFoto } },
         { new: true, useFindAndModify: false });             
-      return res.status(200);
+      return res.status(200).send('Foto deletada com sucesso');
     }    
   }catch(error){    
+    console.log(error)
     return res.status(400).send({ error: 'Error delete da foto' });    
   }  
 });

@@ -47,7 +47,12 @@ UserSchema.pre('save', async function(next){
 
 UserSchema.pre('findOneAndUpdate', async function(next){       
     const user = this.getUpdate().$set;
-    if(user.senha){
+    if(!user){
+        next();
+    }
+    if(!user.senha){
+        next();
+    }else{
         user.senha = await bcrypt.hash(user.senha, 10);
         next();
     }          

@@ -105,14 +105,8 @@ router.delete('/deleteUser', verifyJWT, async(req, res) =>{ //recebe um parametr
 router.put('/updateUser', verifyJWT, async(req, res) => {   
   try{    
     const user = await User.findOneAndUpdate(
-      { email: req.body.email }, 
-      { $set: {nome: req.body.nome,
-      email: req.body.email,
-      senha: req.body.senha,
-      celular: req.body.celular,
-      latitude: req.body.latitude,
-      longitude: req.body.longitude,
-      }},
+      { email: req.body.email },       
+      { $set: req.body},
       { new: true, useFindAndModify: false });             
     return res.send((user));
   }catch(error){    
