@@ -53,8 +53,7 @@ router.post('/postagem', verifyJWT, async(req, res) => {
         { new: true, useFindAndModify: false });
         return res.send((tipo));  
     }         
-  }catch(error){
-    console.log(error)
+  }catch(error){    
     return res.status(400).send({ error: 'Registration failed' });  
   }   
 });
@@ -81,7 +80,6 @@ router.delete('/deletePostsAnimals', verifyJWT, async(req, res) =>{ //recebe um 
     }           
     return res.status(200).send('Post deletado com sucesso');    
   }catch(error){
-    console.log(error);
     return res.status(400).send({ error: 'Error delete post' });
   }  
 });
@@ -124,8 +122,8 @@ router.put('/updatePostsAnimals', verifyJWT, async(req, res) => {
         { new: true, useFindAndModify: false, omitUndefined:true });             
       return res.send((user.perdidos));
     }    
-  }catch(error){    
-    console.log(error)
+  }catch(error){   
+    
     return res.status(400).send({ error: 'Error update user' });    
   }  
 });
@@ -136,8 +134,7 @@ router.post('/fotoPostsAnimals', verifyJWT, multer(multerConfig).single("file"),
   const { originalname: nomeFoto, size: tamanho, key, location: url = ""} = req.file; 
   try{       
     return res.status(200).send((url));   
-  }catch(error){    
-    console.log(error)
+  }catch(error){      
     return res.status(400).send({ error: 'Error post da foto' });    
   }  
 });
@@ -182,7 +179,6 @@ router.put('/deleteFotoPostsAnimals', verifyJWT, multer(multerConfig).single("fi
   const email = req.body.email;
   const tipoPost = req.body.tipo;  
   const urlFoto = req.body.urlFoto;  
-  console.log(urlFoto)
   try{       
     if(tipoPost === 'achados'){
       const user = await User.findOneAndUpdate(
@@ -198,7 +194,6 @@ router.put('/deleteFotoPostsAnimals', verifyJWT, multer(multerConfig).single("fi
       return res.status(200).send('Foto deletada com sucesso');
     }    
   }catch(error){    
-    console.log(error)
     return res.status(400).send({ error: 'Error delete da foto' });    
   }  
 });
@@ -334,10 +329,6 @@ function verifyJWT(req, res, next){
     
     jwt.verify(token, process.env.SECRET, function(err, decoded) { 
       if (err) return res.status(403).json({ auth: false, message: 'Failed to authenticate token.' });
-      
-      // se tudo estiver ok, salva no request para uso posterior
-      // req.userId = decoded.senha;
-      // console.log(req.userId);
       next();
     });
   }

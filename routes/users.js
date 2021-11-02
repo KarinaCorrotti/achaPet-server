@@ -44,10 +44,7 @@ router.post('/create', async(req, res) => {
 });
 
 router.post('/authenticate', async(req, res) =>{    // post de autenticação 
-    const { email, senha } = req.body; 
-    console.log(req.body)
-    console.log('req ', req.file)
-    
+    const { email, senha } = req.body;     
     if(!req.body.senha && !req.body.tokenGoogle){ 
       return res.status(400).send({ error: 'Erro senha e token vazios' });
     }else{     
@@ -89,8 +86,7 @@ router.post('/authenticate', async(req, res) =>{    // post de autenticação
 });
 
 router.delete('/deleteUser', verifyJWT, async(req, res) =>{ //recebe um parametro com email do usuario para deletar do banco de dados  
-  const { email } = req.body;
-  
+  const { email } = req.body;  
   try{
       const user = await User.findOneAndDelete({email});
     if(user.foto.key){
@@ -114,38 +110,30 @@ router.put('/updateUser', verifyJWT, async(req, res) => {
   }  
 });
 
-
 router.post('/putFoto', verifyJWT, multer(multerConfig).single("file"), async(req, res) =>{   
-  console.log(req.file) 
-  // const { originalname: nomeFoto, size: tamanho, key, location: url = ""} = req.file;
+  const { originalname: nomeFoto, size: tamanho, key, location: url = ""} = req.file;
   try{    
     const user = await User.findOneAndUpdate(
       { email: req.body.email }, 
       { $set: { foto: {
-          nomeFoto: '',
-          tamanho: '',
-          key: '',
-          url: ''
+          nomeFoto,
+          tamanho,
+          key,
+          url
         }
       }},
       { new: true, useFindAndModify: false });             
     return res.send((user));
   }catch(error){    
     return res.status(400).send({ error: 'Error update user' });    
-  }   
-  // return res.json({ hello: "DEU CERTO" })
+  }     
 });
-
-
 
 // logout do sistema -------------------------------------------------------------------------
 
 router.post('/logout', async(req, res) =>{  
   res.send({auth: false, token: null})
 });
-
-
-
 
 // função de verificação do Token ------------------------------------------------------------
 
@@ -156,26 +144,17 @@ function verifyJWT(req, res, next){
   jwt.verify(token, process.env.SECRET, function(err, decoded) { 
     if (err) return res.status(403).json({ auth: false, message: 'Failed to authenticate token.' });
     
-    // se tudo estiver ok, salva no request para uso posterior
-    // req.userId = decoded.senha;
-    // console.log(req.userId);
     next();
   });
 }
 
-
-
 //Area de rotas para testes --------------------------------------------------------------------
 
 router.post('/postImage', multer(multerConfig).single("file"), async(req, res) =>{  
-  console.log(req.file);
-
   return res.json({ hello: "DEU CERTO" })
 });
 
-router.get('/client', verifyJWT, async(req, res, next) =>{ // GET de teste
-  // console.log('body do get:', req.userId);
-  
+router.get('/client', verifyJWT, async(req, res, next) =>{ // GET de teste  
   console.log("Retornou todos clientes!");  
 });
 
