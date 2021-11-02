@@ -21,6 +21,8 @@ const jwt = require('jsonwebtoken');
 
 router.post('/postagem', verifyJWT, async(req, res) => {  
   moment.locale('pt-br');  
+  const fotos = req.body.fotos ? req.body.fotos.split(',') : null;
+  console.log(req.body)
   try{
     const tipo = {
         id: Math.random() + Math.random(),
@@ -37,7 +39,7 @@ router.post('/postagem', verifyJWT, async(req, res) => {
         data: moment().format('YYYY-MM-DD'),            
         latitude: req.body.latitude,
         longitude: req.body.longitude,   
-        fotos: req.body.fotos.split(','),     
+        fotos,     
     }
     const tipoPost = req.body.tipo;
     if(tipoPost === 'achados') {
@@ -54,6 +56,7 @@ router.post('/postagem', verifyJWT, async(req, res) => {
         return res.send((tipo));  
     }         
   }catch(error){    
+    console.log(error)
     return res.status(400).send({ error: 'Registration failed' });  
   }   
 });
