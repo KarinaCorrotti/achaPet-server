@@ -54,13 +54,11 @@ router.post('/postagem', verifyJWT, async(req, res) => {
         { $push: {'perdidos': tipo}}, 
         { new: true, useFindAndModify: false });
         return res.send((tipo));  
-    }else{
-      console.log(error)
+    }else{      
       return res.status(400).send({ error: 'Registration failed' });
     }         
-  }catch(error){    
-    console.log(error)
-    return res.status(400).send({ error: 'Registration failed' });  
+  }catch(error){   
+    return res.status(500).send({ error: 'Registration failed' });  
   }   
 });
 
