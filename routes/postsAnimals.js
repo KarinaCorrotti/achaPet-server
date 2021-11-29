@@ -21,8 +21,7 @@ const jwt = require('jsonwebtoken');
 
 router.post('/postagem', verifyJWT, async(req, res) => {  
   moment.locale('pt-br');  
-  const fotos = req.body.fotos ? req.body.fotos.split(',') : null;  
-  console.log(req.body)
+  const fotos = req.body.fotos ? req.body.fotos.split(',') : null;    
   try{
     const tipo = {
         id: Math.random() + Math.random(),
@@ -42,13 +41,13 @@ router.post('/postagem', verifyJWT, async(req, res) => {
         fotos,     
     }
     const tipoPost = req.body.status;
-    if(tipoPost === 'achados') {
+    if(tipoPost === 'achado') {
       await User.updateOne(      
         { email: req.body.email },
         { $push: {'achados': tipo}}, 
         { new: true, useFindAndModify: false });
         return res.send((tipo)); 
-    }else if (tipoPost === 'perdidos'){
+    }else if (tipoPost === 'perdido'){
       await User.updateOne(      
         { email: req.body.email },
         { $push: {'perdidos': tipo}}, 
