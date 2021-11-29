@@ -70,6 +70,8 @@ router.post('/authenticate', async(req, res) =>{    // post de autenticação
         if(!user.senha)
           return res.status(400).send({error: 'Usuario já tem cadastro pela google'});
         //tentando fazer login normal  
+        if(!user.email)
+          return res.status(400).send({error: 'Email nao encontrado'}); 
         if(!user)
           return res.status(400).send({error: 'Usuario nao encontrado'});      
         if(!await bcrypt.compare(senha, user.senha))

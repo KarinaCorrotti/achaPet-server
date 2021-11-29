@@ -41,15 +41,15 @@ router.post('/postagem', verifyJWT, async(req, res) => {
         longitude: req.body.longitude,   
         fotos,     
     }
-    const tipoPost = req.body.tipoPost;
+    const tipoPost = req.body.status;
     if(tipoPost === 'achados') {
-      const user = await User.updateOne(      
+      await User.updateOne(      
         { email: req.body.email },
         { $push: {'achados': tipo}}, 
         { new: true, useFindAndModify: false });
         return res.send((tipo)); 
     }else if (tipoPost === 'perdidos'){
-      const user = await User.updateOne(      
+      await User.updateOne(      
         { email: req.body.email },
         { $push: {'perdidos': tipo}}, 
         { new: true, useFindAndModify: false });
