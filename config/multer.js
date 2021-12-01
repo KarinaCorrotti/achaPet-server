@@ -48,8 +48,7 @@ module.exports = {
             'image/pjpeg',
             'image/png'
         ];
-        if (allowedMimes.includes(file.mimetype)) {
-            console.log('entrou')
+        if (allowedMimes.includes(file.mimetype)) {           
             cb(null, true);
         } else {
             cb(new Error('Invalid file type'));

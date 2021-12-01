@@ -72,16 +72,19 @@ router.delete('/deletePostsAnimals', verifyJWT, async(req, res) =>{ //recebe um 
       await User.findOneAndUpdate(
         { email: email},
         { $pull: { achados: { id: id } } }, 
-        { new: true},
+        { new: true, useFindAndModify: false },
       )
-    }else{
+      return res.status(200).send('Post deletado com sucesso 1'); 
+    }else if(tipoPost === 'perdidos'){
       await User.findOneAndUpdate(
         { email: email},
         { $pull: { perdidos: { id: id } } }, 
-        { new: true},
+        { new: true, useFindAndModify: false },
       )
-    }           
-    return res.status(200).send('Post deletado com sucesso');    
+      return res.status(200).send('Post deletado com sucesso 2'); 
+    }else{
+      return res.status(200).send('Post nao encontrado'); 
+    }             
   }catch(error){
     return res.status(400).send({ error: 'Error delete post' });
   }  
@@ -204,6 +207,7 @@ router.put('/deleteFotoPostsAnimals', verifyJWT, multer(multerConfig).single("fi
 // lista de animais perdidos e achados ---------------------------------------
 
 router.get('/list', verifyJWT, async(req, res) => {  
+  console.log(req.query.tipo)
   try{
     const listUser = await User.find()  
     const listaFinal = [];

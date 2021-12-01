@@ -66,21 +66,23 @@ router.post('/authenticate', async(req, res) =>{    // post de autenticação
           return res.send({ auth: true, user, token });  
         }
       }else if (!req.body.tokenGoogle && req.body.senha){ 
-        const user = await User.findOne({email}).select('+senha');
-        if(!user.senha)
-          return res.status(400).send({error: 'Usuario já tem cadastro pela google'});
-        //tentando fazer login normal  
-        if(!user.email)
-          return res.status(400).send({error: 'Email nao encontrado'}); 
-        if(!user)
-          return res.status(400).send({error: 'Usuario nao encontrado'});      
-        if(!await bcrypt.compare(senha, user.senha))
-          return res.status(400).send({error: 'Senha invalida'});  
-        const token = jwt.sign({ senha: req.body.senha }, process.env.SECRET, { 
-          // expiresIn: 300 //expira em 5 min o token
-        });
-        user.senha = undefined; 
-        res.send({auth: true, user, token});
+        try{
+          const user = await User.findOne({email}).select('+senha');
+          if(!user)
+            return res.status(400).send({error: 'Usuario nao encontrado'});  
+          if(!user.senha)
+            return res.status(400).send({error: 'Usuario já tem cadastro pela google'});   //tentando fazer login normal          
+          if(!await bcrypt.compare(senha, user.senha))
+            return res.status(400).send({error: 'Senha invalida'});  
+          const token = jwt.sign({ senha: req.body.senha }, process.env.SECRET, { 
+            // expiresIn: 300 //expira em 5 min o token
+          });
+          user.senha = undefined; 
+          res.send({auth: true, user, token});
+        }catch(error){
+          return res.status(400).send({ error: 'Login indevido' });
+        }        
+        console.log(user.email)        
       }else {        
         return res.status(400).send({ error: 'Login indevido' }); 
       }
